@@ -1,0 +1,1264 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>おてつだい貯金</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png">
+  <meta name="theme-color" content="#ffcb57">
+<style>
+:root {
+  color-scheme: light;
+  --paper: #fff8e9;
+  --white: #fffefa;
+  --ink: #34271d;
+  --muted: #765f4c;
+  --border: #e7d8bd;
+  --coin: #ffcb57;
+  --coin-light: #ffe5a1;
+  --coin-dark: #945714;
+  --green: #24634e;
+  --green-light: #e7f0db;
+  --green-edge: #cbd9bd;
+  --pink: #a23f32;
+  --pink-light: #fff0e9;
+  --pink-edge: #ecc5b9;
+  --shadow: #ebd9ad;
+  --dark-shadow: #583c25;
+  --focus: #2f685c;
+  --ring-track: #f3e3c6;
+  --radius: 22px;
+  --font: 'M PLUS Rounded 1c', 'Hiragino Maru Gothic ProN', 'Yu Gothic', Meiryo, system-ui, sans-serif;
+  --emoji-font: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 500 16px/1.55 var(--font); }
+button, input, select { font: inherit; color: inherit; min-width: 0; }
+button, a, input, select { -webkit-tap-highlight-color: transparent; }
+button, input:not([type=checkbox]), select, .link-button { min-height: 56px; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 3px solid var(--focus); outline-offset: 3px;
+}
+button { cursor: pointer; }
+button:disabled { cursor: default; opacity: .58; }
+h1, h2, h3, p { margin: 0; }
+h1, h2, h3 { line-height: 1.3; font-weight: 900; }
+h1 { font-size: clamp(1.48rem, 6vw, 1.85rem); }
+h2 { font-size: 1.15rem; }
+h3 { font-size: 1rem; }
+a { color: var(--green); }
+.topbar { background: var(--white); border-bottom: 1px solid var(--border); }
+.topbar-inner {
+  max-width: 560px; margin: auto; min-height: 64px; padding: 0 clamp(14px, 5vw, 22px);
+  display: flex; align-items: center; justify-content: space-between; gap: 4px;
+}
+.brand { display: flex; align-items: center; gap: 9px; font-size: 1.04rem; font-weight: 900; white-space: nowrap; }
+.brand-icon {
+  width: 31px; height: 31px; display: grid; place-items: center; border-radius: 50%;
+  background: var(--coin); color: var(--coin-dark); border: 2px solid var(--coin-dark);
+  box-shadow: inset 0 0 0 2px var(--coin-light), 0 2px 0 var(--shadow);
+  font: 900 18px/1 var(--font);
+}
+.text-button {
+  border: 0; background: transparent; color: var(--green); font-weight: 800;
+  padding: 0 8px; white-space: nowrap; border-radius: 10px;
+}
+.switch { font-size: .81rem; }
+.switch span { margin-left: 3px; }
+main { width: min(100%, 560px); margin: auto; padding: 19px clamp(14px, 5vw, 22px) max(30px, env(safe-area-inset-bottom)); }
+.loading { padding-top: 45px; text-align: center; color: var(--muted); }
+.stack { display: grid; gap: 14px; }
+.page-stack { display: grid; gap: 19px; }
+.compact { gap: 9px; }
+.section-head, .between { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.section-head { margin-bottom: 9px; }
+.section-head h2 { display: flex; align-items: center; gap: 8px; }
+.heading { display: grid; gap: 4px; }
+.heading p, .muted, .helper { color: var(--muted); }
+.helper { font-size: .82rem; }
+.emoji { font-family: var(--emoji-font); }
+.avatar {
+  width: 49px; height: 49px; flex: 0 0 49px; display: grid; place-items: center; border-radius: 18px;
+  background: var(--avatar, var(--coin-light)); font-size: 1.5rem;
+}
+.person-heading { display: flex; gap: 12px; align-items: center; min-width: 0; }
+.person-heading > div, .entry-text, .grow { min-width: 0; }
+.person-heading h1, .entry-text, .wrap { overflow-wrap: anywhere; }
+.person-heading .helper { margin-bottom: 2px; }
+.panel {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px;
+}
+.button, .link-button {
+  display: inline-flex; justify-content: center; align-items: center; gap: 8px; text-align: center;
+  border: 1px solid var(--border); border-radius: 16px; padding: 9px 12px;
+  background: var(--white); color: var(--ink); text-decoration: none; font-weight: 900; line-height: 1.25;
+}
+.button.primary { background: var(--coin); border-color: var(--coin-dark); box-shadow: 0 3px 0 var(--coin-dark); }
+.button.secondary { background: var(--green-light); color: var(--green); border-color: var(--green-edge); }
+.button.negative { background: var(--pink-light); color: var(--pink); border-color: var(--pink-edge); }
+.button:active:not(:disabled), .link-button:active { transform: translateY(1px); }
+.button.wide { width: 100%; }
+.button.large { min-height: 66px; font-size: 1.06rem; }
+.button .emoji { font-size: 1.24em; }
+.back { justify-self: start; padding-left: 0; }
+.page-nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.page-nav .button { font-size: .82rem; padding: 6px 3px; }
+.page-nav .selected { background: var(--green-light); color: var(--green); border-color: var(--green-edge); }
+.balance-panel {
+  position: relative; isolation: isolate; overflow: hidden; background: var(--coin-light);
+  display: grid; align-content: center; justify-items: center; text-align: center;
+  min-height: 166px; padding: 14px 10px; border: 1px solid var(--coin-dark);
+  border-radius: 25px; box-shadow: 0 4px 0 var(--shadow);
+}
+.balance-panel::before, .balance-panel::after {
+  content: '¥'; position: absolute; z-index: -1; display: grid; place-items: center; border-radius: 50%;
+  border: 3px double var(--coin-dark); color: var(--coin-dark); opacity: .26; font-weight: 900;
+}
+.balance-panel::before { width: 65px; height: 65px; right: -13px; top: 9px; transform: rotate(20deg); font-size: 2rem; }
+.balance-panel::after { width: 51px; height: 51px; left: -13px; bottom: 9px; transform: rotate(-22deg); font-size: 1.5rem; }
+.balance-label { color: var(--coin-dark); font-weight: 900; }
+.balance-number { font-size: clamp(2.25rem, 12vw, 3.4rem); font-weight: 900; line-height: 1.05; overflow-wrap: anywhere; }
+.balance-number small { font-size: .39em; margin-left: 3px; }
+.balance-minutes { margin-top: 6px; font-weight: 900; }
+.balance-meta { margin-top: 5px; color: var(--coin-dark); font-size: .86rem; font-weight: 800; }
+.entry-list { padding: 2px 13px; }
+.entry { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 7px; padding: 10px 0; }
+.entry + .entry { border-top: 1px dashed var(--border); }
+.entry-text { font-size: .9rem; font-weight: 800; }
+.entry-text p { font-weight: 500; }
+.entry-value { display: grid; justify-items: end; gap: 4px; }
+.button.revoke-button { min-height: 44px; padding: 6px 8px; font-size: .8rem; }
+.yen { font-size: .95rem; font-weight: 900; white-space: nowrap; }
+.yen.cancelled { color: #615c56; text-decoration: line-through; }
+.plus { color: var(--green); }
+.minus { color: var(--pink); }
+.pill { border-radius: 99px; padding: 2px 8px; font-size: .77rem; font-weight: 800; background: var(--coin-light); color: var(--coin-dark); }
+.pill.approved { background: var(--green-light); color: var(--green); }
+.pill.rejected { background: var(--pink-light); color: var(--pink); }
+.pill.cancelled { background: #eeeae4; color: #615c56; }
+.empty { color: var(--muted); font-size: .88rem; padding: 12px 0; }
+.tile-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.tile {
+  min-height: 111px; border: 1px solid var(--border); box-shadow: 0 2px 0 var(--shadow); border-radius: 19px;
+  background: var(--white); display: grid; place-items: center; align-content: center; gap: 3px;
+  padding: 9px 6px; text-align: center; line-height: 1.3; overflow-wrap: anywhere; font-weight: 900;
+}
+.tile .emoji { font-size: 1.73rem; }
+.tile-value { color: var(--coin-dark); font-size: .84rem; font-weight: 900; }
+.tile .avatar { margin-bottom: 3px; }
+.pick-panel { display: grid; gap: 6px; justify-items: center; padding: 18px 14px; }
+.pick-stepper { display: flex; align-items: center; justify-content: center; gap: 18px; width: 100%; }
+.button.step-button {
+  width: 64px; height: 64px; min-height: 64px; padding: 0; border-radius: 50%; font-size: 1.9rem; font-weight: 900;
+  background: var(--white); border-color: var(--border); box-shadow: 0 2px 0 var(--shadow); justify-content: center;
+}
+.button.step-button:disabled { opacity: .4; }
+.pick-value { margin: 0; font-weight: 800; min-width: 4.5em; text-align: center; }
+.pick-value strong { font-size: clamp(2.6rem, 14vw, 3.6rem); font-weight: 900; line-height: 1; margin-right: 2px; }
+.pick-cost { margin: 0; color: var(--coin-dark); font-weight: 800; }
+.pick-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.tile.pick-tile { min-height: 76px; gap: 0; }
+.pick-number { font-size: 1.5rem; font-weight: 900; line-height: 1.1; }
+.tile.pick-tile.selected { background: var(--coin-light); border-color: var(--coin-dark); box-shadow: 0 2px 0 var(--coin-dark); }
+.timer-panel { text-align: center; justify-items: center; }
+.timer-ring {
+  --progress: 100%;
+  width: min(100%, 286px); aspect-ratio: 1; border-radius: 50%;
+  background: conic-gradient(var(--coin) var(--progress), var(--ring-track) 0);
+  padding: 13px; display: grid; margin: 7px auto 3px; isolation: isolate;
+}
+.timer-face {
+  border-radius: 50%; background: var(--white); border: 1px solid var(--border);
+  display: grid; place-content: center; justify-items: center; padding: 10px;
+}
+.timer-readout { font-weight: 900; font-size: clamp(2.5rem, 13vw, 3.65rem); line-height: 1.15; font-variant-numeric: tabular-nums; }
+.timer-readout.long-time { font-size: clamp(1rem, 7vw, 1.8rem); }
+.timer-status { min-height: 25px; color: var(--pink); font-weight: 900; }
+.timer-used { font-weight: 800; }
+.timer-panel > .button { margin-top: 6px; }
+.setup-title { padding: 7px 0 1px; display: grid; gap: 5px; }
+.setup-title .brand-icon { width: 52px; height: 52px; font-size: 27px; margin-bottom: 4px; }
+.fields { display: grid; gap: 11px; }
+.field { display: grid; gap: 4px; min-width: 0; font-size: .89rem; font-weight: 800; }
+.field input, .field select {
+  width: 100%; border: 1px solid var(--border); border-radius: 12px; background: var(--white);
+  padding: 9px 10px; font-size: 1rem; font-weight: 700;
+}
+.field input::placeholder { color: var(--muted); opacity: .8; }
+.field-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 9px; align-items: end; }
+.kid-fields { display: grid; grid-template-columns: minmax(0, 1fr) 75px; gap: 9px; }
+.check { min-height: 56px; display: flex; align-items: center; gap: 9px; font-size: .87rem; font-weight: 800; }
+.check input { flex: 0 0 20px; width: 20px; height: 20px; margin: 0; accent-color: var(--green); }
+.card-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+.kid-card-name { display: flex; align-items: center; gap: 8px; }
+.kid-card-name .avatar { width: 39px; height: 39px; flex-basis: 39px; border-radius: 12px; font-size: 1.18rem; }
+.parent-running { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+.parent-running strong { display: block; color: var(--green); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.record-actions { display: grid; gap: 6px; }
+.record-actions .button { justify-content: flex-start; }
+.edit-card { display: grid; gap: 5px; }
+.edit-chore-fields { display: grid; grid-template-columns: 63px minmax(0, 1fr) 68px; gap: 7px; }
+.order-buttons { display: flex; gap: 5px; }
+.order-buttons .button { min-width: 56px; padding: 5px; }
+.settings-footer {
+  position: sticky; bottom: 0; z-index: 1; background: var(--paper);
+  margin: 0 -4px -5px; padding: 8px 4px max(9px, env(safe-area-inset-bottom));
+}
+.toast {
+  position: fixed; z-index: 5; right: 12px; left: 12px; bottom: max(17px, env(safe-area-inset-bottom));
+  max-width: 510px; margin: auto; padding: 12px 15px; background: var(--ink); color: var(--white);
+  border-radius: 14px; box-shadow: 0 3px 0 var(--dark-shadow); text-align: center; font-size: .9rem; font-weight: 800;
+}
+@media (max-width: 340px) {
+  .field-pair { grid-template-columns: minmax(0, 1fr); }
+  .edit-chore-fields { grid-template-columns: 51px minmax(0, 1fr) 60px; gap: 4px; }
+  .field input, .field select { padding-inline: 6px; }
+}
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand"><span class="brand-icon" aria-hidden="true">¥</span>おてつだい貯金</div>
+      <button id="switch" class="switch text-button" type="button" hidden>きりかえ <span aria-hidden="true">↔</span></button>
+    </div>
+  </header>
+  <main id="app" aria-busy="true"><p class="loading">よみこみ中…</p></main>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <script>window.APP_API_URL = 'https://script.google.com/macros/s/AKfycbw6UQJq199pBz7MYazB9_xJOZmT8lzN6IMT_XFSWlygTqgBd0KqBPuhXZ1XDtLgUAC7/exec';</script>
+<script>
+(() => {
+  'use strict';
+
+  const app = document.querySelector('#app');
+  const switchButton = document.querySelector('#switch');
+  const toastElement = document.querySelector('#toast');
+  const keys = { code: 'help-save-code', kid: 'help-save-kid', pin: 'help-save-pin', voiceOff: 'help-save-voice-off' };
+  // のこり時間を声で知らせるタイミング（秒）と、読み上げる言葉（読み間違いを防ぐため漢字まじり）
+  const voiceSteps = [
+    { at: 600, text: 'あと10分です' },
+    { at: 300, text: 'あと5分です' },
+    { at: 180, text: 'あと3分です。そろそろ終わる準備をしよう' },
+    { at: 60, text: 'あと1分です。もうすぐおしまいだよ' }
+  ];
+  const connectionError = 'つうしんできなかったよ。もういちどためしてね';
+  const statuses = { pending: 'しょうにん待ち', approved: 'OK', rejected: 'ざんねん', cancelled: 'とりけし' };
+  const startReasons = { balance: 'ちょきんがたりないよ', cap: 'きょうはもうおしまい' };
+  const dateFormat = new Intl.DateTimeFormat('ja-JP', {
+    timeZone: 'Asia/Tokyo', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
+  });
+  const parentPages = ['parent', 'history', 'settings', 'record'];
+  const ui = {
+    page: 'loading', data: null, code: stored('localStorage', keys.code) || '',
+    pin: stored('localStorage', keys.pin) || stored('sessionStorage', keys.pin) || '',
+    kidId: stored('localStorage', keys.kid) || '', skew: 0, authVersion: 0,
+    fetchVersion: 0, busy: false, polling: false, toastId: null,
+    timer: null, draft: null, filter: '', record: null, revokeId: null, revokeTimeout: null,
+    voiceOff: stored('localStorage', keys.voiceOff) === '1'
+  };
+  let audio;
+  let wakeLock;
+  let wakePending = false;
+
+  function stored(area, key, value) {
+    try {
+      const storage = window[area];
+      if (value === undefined) return storage.getItem(key);
+      if (value) storage.setItem(key, value);
+      else storage.removeItem(key);
+    } catch (_) {}
+  }
+
+  function rememberPin(pin, remember) {
+    ui.pin = pin;
+    stored('localStorage', keys.pin, remember ? pin : '');
+    stored('sessionStorage', keys.pin, remember ? '' : pin);
+  }
+
+  function persistCode(code) {
+    if (ui.code !== code) ui.authVersion++;
+    ui.code = code;
+    stored('localStorage', keys.code, code);
+  }
+
+  function toast(message) {
+    clearTimeout(ui.toastId);
+    toastElement.textContent = message;
+    toastElement.hidden = false;
+    ui.toastId = setTimeout(() => { toastElement.hidden = true; }, 4200);
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, char =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
+  }
+
+  async function rpc(name, args) {
+    // The preview embeds this script verbatim. Only the Pages build writes the full configuration key.
+    const apiUrl = window['APP_API_' + 'URL'];
+    if (apiUrl) {
+      let envelope;
+      try {
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ fn: name, args: args === undefined ? null : args }),
+          credentials: 'omit',
+          redirect: 'follow',
+          cache: 'no-store'
+        });
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        envelope = await response.json();
+        if (envelope?.ok === true && Object.prototype.hasOwnProperty.call(envelope, 'result')) return envelope.result;
+        if (envelope?.ok !== false || typeof envelope.kind !== 'string' || typeof envelope.message !== 'string') {
+          throw new Error('Invalid API response');
+        }
+      } catch (_) {
+        throw Object.assign(new Error(connectionError), { kind: 'network' });
+      }
+      throw Object.assign(new Error(envelope.message), { kind: envelope.kind });
+    }
+
+    return new Promise((resolve, reject) => {
+      const runner = google.script.run.withSuccessHandler(resolve).withFailureHandler(error => {
+        const expected = String(error?.message || error).match(/APP\|([a-zA-Z]+)\|([^\r\n]+)/);
+        reject(Object.assign(new Error(expected ? expected[2] : connectionError),
+          { kind: expected ? expected[1] : 'network' }));
+      });
+      if (args === undefined) runner[name]();
+      else runner[name](args);
+    });
+  }
+
+  function call(name, fields = {}, parent = false) {
+    return rpc(name, { ...fields, code: ui.code, ...(parent ? { pin: ui.pin } : {}) });
+  }
+
+  function showError(error) {
+    if (error.kind === 'code') {
+      persistCode('');
+      rememberPin('', false);
+      ui.data = null;
+      go('code');
+    } else if (['pin', 'pinLock'].includes(error.kind) && parentPages.includes(ui.page)) {
+      rememberPin('', false);
+      go('parentPin');
+    }
+    toast(error.message || connectionError);
+  }
+
+  async function action(button, work) {
+    if (ui.busy) return;
+    ui.busy = true;
+    switchButton.disabled = true;
+    if (button) button.disabled = true;
+    try {
+      await work();
+    } catch (error) {
+      showError(error);
+    } finally {
+      ui.busy = false;
+      switchButton.disabled = false;
+      if (button?.isConnected) button.disabled = false;
+    }
+  }
+
+  function go(page) {
+    const changed = ui.page !== page;
+    if (changed && ui.page === 'history') resetRevoke();
+    ui.page = page;
+    render();
+    if (changed) window.scrollTo(0, 0);
+  }
+
+  function ownKid() {
+    return ui.data?.kids.find(kid => kid.id === ui.kidId && kid.active);
+  }
+
+  function setClock(serverNow) {
+    ui.skew = serverNow - Date.now();
+  }
+
+  function now() {
+    return Date.now() + ui.skew;
+  }
+
+  function chooseLanding() {
+    const kid = ownKid();
+    if (kid?.session) showTimer(kid.session);
+    else go(kid ? 'kid' : 'chooser');
+  }
+
+  async function refresh(parent = parentPages.includes(ui.page), repaint = true) {
+    const auth = ui.authVersion;
+    const request = ++ui.fetchVersion;
+    const state = await call('api_getState', {}, parent);
+    if (auth !== ui.authVersion || request !== ui.fetchVersion) return;
+    ui.data = state;
+    setClock(state.serverNow);
+    if (!repaint) return;
+
+    if (['kid', 'chores', 'timer'].includes(ui.page)) {
+      const kid = ownKid();
+      if (!kid) {
+        go('chooser');
+      } else if (ui.page !== 'timer' && kid.session) {
+        showTimer(kid.session);
+      } else if (ui.page === 'timer') {
+        if (ui.timer.finished) return;
+        if (kid.session?.startedAt === ui.timer.session.startedAt) {
+          tick();
+        } else if (secondsLeft(ui.timer.session) <= 0) {
+          tick();
+        } else if (kid.session) {
+          showTimer(kid.session);
+        } else {
+          go('kid');
+          toast('ゲームがおわったよ。');
+        }
+      } else {
+        render();
+      }
+    } else if (['chooser', 'parent', 'history'].includes(ui.page)) {
+      render();
+    }
+  }
+
+  async function poll() {
+    if (document.hidden || ui.busy || ui.polling || !ui.code || !ui.data) return;
+    ui.polling = true;
+    const auth = ui.authVersion;
+    const page = ui.page;
+    try {
+      await refresh();
+    } catch (error) {
+      if (auth === ui.authVersion && page === ui.page && !ui.busy) showError(error);
+    } finally {
+      ui.polling = false;
+    }
+  }
+
+  function badge(label, tone = '') {
+    return '<span class="pill ' + tone + '">' + escapeHtml(label) + '</span>';
+  }
+
+  function emoji(value) {
+    return '<span class="emoji" aria-hidden="true">' + escapeHtml(value) + '</span>';
+  }
+
+  function avatar(person) {
+    const style = /^#[\da-f]{6}$/i.test(person.color || '') ? ' style="--avatar:' + person.color + '"' : '';
+    return '<span class="avatar emoji"' + style + ' aria-hidden="true">' + escapeHtml(person.emoji) + '</span>';
+  }
+
+  function button(label, actionName, style = '', attributes = '') {
+    return '<button type="button" class="button ' + style + '" data-action="' + actionName + '"' + attributes + '>' + label + '</button>';
+  }
+
+  function back(actionName, label = 'もどる') {
+    return '<button class="back text-button" type="button" data-action="' + actionName + '">‹　' + label + '</button>';
+  }
+
+  function submit(label) {
+    return '<button class="button primary wide" type="submit">' + label + '</button>';
+  }
+
+  function attrId(id) {
+    return ' data-id="' + escapeHtml(id) + '"';
+  }
+
+  function signed(yen) {
+    return (yen > 0 ? '+' : yen < 0 ? '−' : '') + Math.abs(yen).toLocaleString('ja-JP');
+  }
+
+  function balanceText(yen) {
+    return yen < 0 ? signed(yen) : yen.toLocaleString('ja-JP');
+  }
+
+  function resetRevoke() {
+    clearTimeout(ui.revokeTimeout);
+    ui.revokeId = null;
+    const target = app.querySelector('.revoke-confirm');
+    if (target) {
+      target.classList.remove('revoke-confirm');
+      target.textContent = '取り消す';
+    }
+  }
+
+  function input(label, name, value = '', attrs = '') {
+    return '<label class="field"><span>' + label + '</span><input name="' + name + '" value="' +
+      escapeHtml(value) + '" ' + attrs + '></label>';
+  }
+
+  function select(label, name, options) {
+    const labelId = 'select-label-' + name;
+    return '<label class="field"><span id="' + labelId + '">' + label + '</span><select name="' + name +
+      '" aria-labelledby="' + labelId + '">' + options + '</select></label>';
+  }
+
+  function option(value, label, selected = false) {
+    return '<option value="' + escapeHtml(value) + '"' + (selected ? ' selected' : '') + '>' + escapeHtml(label) + '</option>';
+  }
+
+  function check(label, name, checked) {
+    return '<label class="check"><input type="checkbox" name="' + name + '"' + (checked ? ' checked' : '') + '>' + label + '</label>';
+  }
+
+  function nameFields(kid) {
+    return '<div class="kid-fields">' +
+      input('なまえ', 'name', kid.name, 'required maxlength="40" placeholder="はな"') +
+      input('絵文字', 'emoji', kid.emoji, 'maxlength="32"') + '</div>';
+  }
+
+  function setupPage() {
+    return '<div class="setup-title"><span class="brand-icon" aria-hidden="true">¥</span>' +
+      '<h1>はじめての設定</h1><p class="muted">おうちの人といっしょに設定してね。</p></div>' +
+      '<form id="setup" class="stack">' +
+      '<section class="panel fields">' +
+      input('家族のあいことば', 'code', '', 'required maxlength="100" autocomplete="off"') +
+      input('親の暗証番号（4桁）', 'pin', '', 'type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="new-password"') +
+      '</section><section class="panel fields"><h2>子ども</h2><div id="setup-kids" class="fields"><div data-kid>' +
+      nameFields({ name: '', emoji: '🐰' }) + '</div></div>' +
+      button('＋ 子どもをついか', 'add-setup-kid', 'secondary') + '</section>' + submit('はじめる') + '</form>';
+  }
+
+  function codePage() {
+    return '<div class="setup-title"><span class="brand-icon" aria-hidden="true">¥</span><h1>あいことばをいれてね</h1>' +
+      '<p class="muted">おうちの人にきいてね。</p></div><form id="code" class="panel fields">' +
+      input('あいことば', 'code', '', 'required maxlength="100" autocomplete="off"') + submit('すすむ') + '</form>';
+  }
+
+  function chooserPage() {
+    const kids = ui.data.kids.filter(kid => kid.active);
+    const tiles = [...kids, { id: 'parent', name: 'おうちの人', emoji: '🏠', color: '#e7f0db' }]
+      .map(kid => '<button type="button" class="tile" data-action="choose"' + attrId(kid.id) + '>' +
+        avatar(kid) + escapeHtml(kid.name) + '</button>').join('');
+    return '<div class="heading"><h1>だれがつかう？</h1></div><div class="tile-grid">' + tiles +
+      '</div>' + back('forget-code', 'あいことばを入れなおす');
+  }
+
+  function entryList(entries, parent = false) {
+    if (!entries.length) return '<p class="empty">まだきろくがないよ。</p>';
+    return '<div class="panel entry-list">' + entries.map(entry => {
+      const kid = ui.data.editable?.kids.find(person => person.id === entry.kidId);
+      const detail = parent ? '<p class="helper">' + escapeHtml(dateFormat.format(new Date(entry.ts))) + ' ・ ' +
+        escapeHtml(kid?.name || '子ども') + '</p>' : '';
+      const minutes = entry.minutes ? ' ' + entry.minutes + '分' : '';
+      const cancelled = entry.status === 'cancelled';
+      const statusLabel = parent && cancelled ? '取り消し' : statuses[entry.status];
+      const status = entry.type === 'chore' ? '<div>' + badge(statusLabel, entry.status) + '</div>' : '';
+      const confirming = ui.revokeId === entry.id;
+      const revoke = parent && entry.type === 'chore' && entry.status === 'approved' ?
+        button(confirming ? '本当に取り消す？' : '取り消す', 'revoke',
+          'negative revoke-button' + (confirming ? ' revoke-confirm' : ''), attrId(entry.id)) : '';
+      const tone = cancelled ? 'cancelled' : entry.yen < 0 ? 'minus' : 'plus';
+      return '<div class="entry"><div class="entry-text">' + escapeHtml(entry.label + minutes) + detail + status +
+        (parent && entry.note ? '<p class="helper">' + escapeHtml(entry.note) + '</p>' : '') +
+        '</div><div class="entry-value"><span class="yen ' + tone + '">' + signed(entry.yen) + '円</span>' +
+        revoke + '</div></div>';
+    }).join('') + '</div>';
+  }
+
+  function kidPage() {
+    const kid = ownKid();
+    const cap = ui.data.settings.dailyCapMinutes;
+    const inDebt = kid.balance < 0;
+    return '<div class="person-heading">' + avatar(kid) + '<div><h1>' +
+      escapeHtml(kid.name) + 'の ちょきん</h1></div></div>' +
+      '<section class="balance-panel" aria-label="のこりのちょきん"><p class="balance-label">のこり</p>' +
+      '<p class="balance-number' + (inDebt ? ' minus' : '') + '">' + balanceText(kid.balance) + '<small>円</small></p>' +
+      (inDebt ? '<p class="balance-minutes minus">マイナスのぶんを<br>おてつだいで とりかえそう</p>' :
+        '<p class="balance-minutes">＝ ゲーム ' + kid.minutesAvailable + '分</p>') +
+      (kid.pendingYen ? '<p class="balance-meta">しょうにん待ち ' + signed(kid.pendingYen) + '円</p>' : '') + '</section>' +
+      '<div class="stack compact">' +
+      (cap ? '<p class="helper">きょうのゲーム ' + kid.usedTodayMinutes + '分 / ' + cap + '分</p>' : '') +
+      button(emoji('🎮') + 'ゲームをはじめる', 'pick', 'primary wide large', kid.startReason ? ' disabled' : '') +
+      (kid.startReason ? '<p class="helper">' + startReasons[kid.startReason] + '</p>' : '') +
+      button(emoji('🧹') + 'おてつだいした！', 'chores', 'secondary wide large') + '</div>' +
+      '<section><div class="section-head"><h2>りれき</h2></div>' + entryList(kid.recent) + '</section>';
+  }
+
+  function choresPage() {
+    const tiles = ui.data.chores.map(chore =>
+      '<button type="button" class="tile" data-action="request"' + attrId(chore.id) + '>' +
+      emoji(chore.emoji) + '<span>' + escapeHtml(chore.name) + '</span>' +
+      '<span class="tile-value">＋' + chore.yen + '円</span></button>').join('');
+    return back('kid', 'ちょきんにもどる') + '<div class="heading"><h1>おてつだいした！</h1>' +
+      '<p>なにをしたか、えらんでね。</p></div>' +
+      (tiles ? '<div class="tile-grid">' + tiles + '</div>' : '<p class="empty">いまはえらべるおてつだいがないよ。</p>');
+  }
+
+  // 「なんぷん あそぶ？」：残高の範囲で遊ぶ時間を選んでからタイマーを始める
+  function pickLimit() {
+    return Math.max(1, ownKid()?.minutesAvailable || 1);
+  }
+
+  function pickValue() {
+    return Math.max(1, Math.min(ui.pickMinutes || 10, pickLimit()));
+  }
+
+  function pickPage() {
+    const kid = ownKid();
+    const max = pickLimit();
+    const value = pickValue();
+    const rate = ui.data.settings.yenPerMinute;
+    const tile = (minutes, label) => '<button type="button" class="tile pick-tile' + (minutes === value ? ' selected' : '') +
+      '" data-action="pick-set"' + attrId(minutes) + '><span class="pick-number">' + minutes + '</span><span>' + label + '</span></button>';
+    const tiles = [5, 10, 15, 20, 30, 45, 60].filter(minutes => minutes < max).map(minutes => tile(minutes, '分')).join('') +
+      tile(max, '分（ぜんぶ）');
+    return back('kid', 'ちょきんにもどる') +
+      '<div class="heading"><h1>なんぷん あそぶ？</h1><p>のこり ' + kid.balance + '円 ＝ ' + max + '分まで えらべるよ。</p></div>' +
+      '<section class="panel pick-panel"><div class="pick-stepper">' +
+      button('−', 'pick-minus', 'step-button', ' aria-label="1分へらす"' + (value <= 1 ? ' disabled' : '')) +
+      '<p class="pick-value"><strong>' + value + '</strong>分</p>' +
+      button('＋', 'pick-plus', 'step-button', ' aria-label="1分ふやす"' + (value >= max ? ' disabled' : '')) +
+      '</div><p class="pick-cost">つかう ちょきん：さいだい ' + value * rate + '円</p>' +
+      '<p class="helper">はやく おわったら、あそんだ ぶんだけ へるよ</p></section>' +
+      '<div class="tile-grid pick-grid">' + tiles + '</div>' +
+      button(emoji('▶️') + value + '分 スタート', 'start', 'primary wide large');
+  }
+
+  function adjustPick(name, id) {
+    const max = pickLimit();
+    const value = pickValue();
+    if (name === 'pick-set') ui.pickMinutes = Number(id);
+    else if (name === 'pick-minus') ui.pickMinutes = value - 1;
+    else ui.pickMinutes = value + 1;
+    ui.pickMinutes = Math.max(1, Math.min(ui.pickMinutes, max));
+    render();
+  }
+
+  function timerPage() {
+    const kid = ownKid();
+    return '<div class="person-heading">' + avatar(kid) + '<div><p class="helper">' + escapeHtml(kid.name) +
+      'の ゲーム</p><h1>ゲームのじかん</h1></div></div>' +
+      '<section class="timer-panel panel stack"><div class="timer-ring" id="timer-ring"><div class="timer-face">' +
+      '<span class="helper">のこり</span><strong id="timer-time" class="timer-readout">--:--</strong></div></div>' +
+      '<p id="timer-status" class="timer-status" role="status"></p><p id="timer-used" class="timer-used"></p>' +
+      button('おわる', 'stop', 'primary wide large', ' id="timer-button"') +
+      '<button type="button" class="text-button" id="sound-button" data-action="sound" hidden>おとをならす</button>' +
+      '<button type="button" class="text-button" id="voice-button" data-action="voice" hidden></button></section>';
+  }
+
+  function pinPage() {
+    return back('chooser') + '<div class="heading"><h1>おうちの人</h1><p>暗証番号を入力してください。</p></div>' +
+      '<form id="pin" class="panel fields">' +
+      input('暗証番号（4桁）', 'pin', '', 'type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="current-password"') +
+      check('この端末では暗証番号をおぼえる', 'remember', false) + submit('ひらく') + '</form>';
+  }
+
+  function parentHeader(title) {
+    const tabs = [['parent', '承認・記録'], ['history', '履歴'], ['settings', '設定']];
+    return '<div class="person-heading">' + avatar({ emoji: '🏠', color: '#e7f0db' }) +
+      '<div><h1>' + title + '</h1></div></div><nav class="page-nav" aria-label="おうちの人のメニュー">' +
+      tabs.map(([page, label]) => button(label, page, page === ui.page ? 'selected' : '',
+        page === ui.page ? ' aria-current="page"' : '')).join('') + '</nav>';
+  }
+
+  function parentPage() {
+    const data = ui.data;
+    const pending = data.pending.map(entry => {
+      const kid = data.editable.kids.find(person => person.id === entry.kidId);
+      return '<article class="panel stack compact"><div class="between"><div class="entry-text"><p class="helper">' +
+        escapeHtml(kid ? kid.emoji + ' ' + kid.name : '子ども') + '</p><div>' + escapeHtml(entry.label) +
+        '</div></div><strong class="yen plus">' + signed(entry.yen) + '円</strong></div><div class="card-actions">' +
+        button('✓ OK', 'approve', 'secondary', attrId(entry.id)) +
+        button('✕ ちがう', 'reject', 'negative', attrId(entry.id)) + '</div></article>';
+    }).join('');
+    const cards = data.kids.map(kid => {
+      const cap = data.settings.dailyCapMinutes;
+      const running = kid.session ? '<div class="parent-running"><strong data-countdown="' + escapeHtml(kid.id) +
+        '"></strong>' + button('とめる', 'parent-stop', 'negative', attrId(kid.id)) + '</div>' : '';
+      return '<article class="panel stack compact"><div class="between"><div class="kid-card-name">' + avatar(kid) +
+        '<h3 class="wrap">' + escapeHtml(kid.name) + '</h3></div><strong class="yen' +
+        (kid.balance < 0 ? ' minus' : '') + '">' + balanceText(kid.balance) +
+        '円</strong></div><p class="helper">今日のゲーム ' + kid.usedTodayMinutes + '分' +
+        (cap ? ' / ' + cap + '分' : '') + '</p>' + running + '</article>';
+    }).join('');
+    return parentHeader('おうちの人') +
+      '<section><div class="section-head"><h2>承認待ち ' + badge(data.pending.length + '件') + '</h2></div>' +
+      (pending ? '<div class="stack compact">' + pending + '</div>' : '<p class="empty">承認待ちはありません。</p>') + '</section>' +
+      '<section><div class="section-head"><h2>子どものようす</h2></div><div class="stack compact">' + cards + '</div></section>' +
+      '<section class="record-actions" aria-label="記録する">' +
+      button(emoji('🧹') + 'おてつだいを記録', 'record', 'secondary', attrId('chore')) +
+      button(emoji('🎮') + 'ゲームを記録（タイマーなし）', 'record', 'secondary', attrId('game')) + '</section>';
+  }
+
+  function historyPage() {
+    const entries = ui.data.history.filter(entry => !ui.filter || entry.kidId === ui.filter);
+    return parentHeader('履歴') + select('子どもで絞り込み', 'history-filter', option('', '全員') +
+      ui.data.editable.kids.map(kid => option(kid.id, kid.name, ui.filter === kid.id)).join('')) +
+      entryList(entries, true);
+  }
+
+  function recordPage() {
+    const labels = { chore: 'おてつだいを記録', adjust: 'ボーナス・調整', game: 'ゲームを記録（タイマーなし）' };
+    const kidOptions = ui.data.kids.filter(kid => kid.active).map(kid => option(kid.id, kid.name)).join('');
+    let fields = '';
+    if (ui.record === 'chore') {
+      fields += select('おてつだい', 'choreId', ui.data.chores.map(chore =>
+        option(chore.id, chore.emoji + ' ' + chore.name + '（' + chore.yen + '円）')).join('') + option('custom', '自由に入力'));
+      fields += '<div id="custom-chore" class="fields" hidden>' +
+        input('おてつだいの名前', 'label', '', 'maxlength="100"') +
+        input('金額（円）', 'yen', '', 'type="number" min="0" step="1" inputmode="numeric"') + '</div>';
+    } else {
+      fields += ui.record === 'adjust' ? input('金額（±円）', 'yen', '', 'type="number" step="1" required placeholder="-10"') :
+        input('遊んだ分数', 'minutes', '', 'type="number" min="1" step="1" inputmode="numeric" required');
+      fields += input('メモ（任意）', 'note', '', 'maxlength="300"');
+    }
+    return back('parent', '承認・記録にもどる') + '<h1>' + labels[ui.record] + '</h1>' +
+      '<form id="record" class="panel fields">' + select('子ども', 'kidId', kidOptions) + fields + submit('記録する') + '</form>';
+  }
+
+  function settingsPage() {
+    const draft = ui.draft;
+    const editableKids = draft.kids.map(kid => '<div class="panel edit-card" data-edit-kid>' +
+      nameFields(kid) + check('表示する', 'active', kid.active) + '</div>').join('');
+    const editableChores = draft.chores.map((chore, index) =>
+      '<div class="panel edit-card" data-edit-chore><div class="edit-chore-fields">' +
+      input('絵文字', 'emoji', chore.emoji, 'maxlength="32"') +
+      input('おてつだい', 'name', chore.name, 'required maxlength="40"') +
+      input('円', 'yen', chore.yen, 'type="number" step="1" min="0" inputmode="numeric" required') +
+      '</div><div class="between">' + check('表示する', 'active', chore.active) + '<div class="order-buttons">' +
+      button('↑', 'up', '', attrId(index) + ' aria-label="上に移動"' + (index === 0 ? ' disabled' : '')) +
+      button('↓', 'down', '', attrId(index) + ' aria-label="下に移動"' + (index === draft.chores.length - 1 ? ' disabled' : '')) +
+      '</div></div></div>').join('');
+    const link = /^https:\/\/docs\.google\.com\/spreadsheets\//.test(ui.data.sheetUrl) ?
+      '<a class="link-button" href="' + escapeHtml(ui.data.sheetUrl) +
+        '" target="_blank" rel="noopener">スプレッドシートを開く ↗</a>' : '';
+    return parentHeader('設定') + '<form id="settings" class="page-stack">' +
+      '<section class="panel fields"><h2>ゲームの設定</h2>' +
+      input('1分あたりの円', 'rate', draft.rate, 'type="number" min="1" step="1" inputmode="numeric" required') +
+      '<p class="helper">1分あたり1円なら、10分あそぶと10円へります。</p></section>' +
+      '<section class="stack compact"><h2>おてつだい</h2>' + editableChores +
+      button('＋ おてつだいを追加', 'add-chore', 'secondary') + '</section>' +
+      '<section class="stack compact"><h2>子ども</h2>' + editableKids +
+      button('＋ 子どもを追加', 'add-kid', 'secondary') + '</section>' +
+      '<section class="panel fields"><h2>あいことば・暗証番号</h2>' +
+      input('新しいあいことば', 'newCode', draft.newCode, 'maxlength="100" autocomplete="off"') +
+      input('新しい暗証番号（4桁）', 'newPin', draft.newPin, 'type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="new-password"') +
+      '<p class="helper">変えない項目は空欄のままにしてください。</p></section>' + link +
+      '<div class="settings-footer">' + submit('設定を保存') + '</div></form>';
+  }
+
+  const pages = {
+    fresh: setupPage, code: codePage, chooser: chooserPage, kid: kidPage, chores: choresPage, pick: pickPage, timer: timerPage,
+    parentPin: pinPage, parent: parentPage, history: historyPage, record: recordPage, settings: settingsPage,
+    unavailable: () => '<p class="muted">よみこめなかったよ。</p>' + button('もういちどためす', 'retry', 'primary wide')
+  };
+
+  function render() {
+    switchButton.hidden = !ui.data || ui.page === 'chooser' || ui.page === 'code';
+    if (ui.page !== 'timer') releaseWake();
+    if (ui.page !== 'timer' && ui.timer?.finished) ui.timer = null;
+    app.className = 'page-stack';
+    app.setAttribute('aria-busy', String(ui.page === 'loading'));
+    app.innerHTML = pages[ui.page] ? pages[ui.page]() : '<p class="loading">よみこみ中…</p>';
+    if (ui.page === 'record') updateCustomChore();
+    tick();
+  }
+
+  function initDraft() {
+    ui.draft = {
+      rate: ui.data.settings.yenPerMinute,
+      newCode: '', newPin: '', kids: ui.data.editable.kids.map(kid => ({ ...kid })),
+      chores: ui.data.editable.chores.map(chore => ({ ...chore }))
+    };
+  }
+
+  function readDraft(form) {
+    const fields = form.elements;
+    ui.draft.rate = fields.rate.value;
+    ui.draft.newCode = fields.newCode.value;
+    ui.draft.newPin = fields.newPin.value;
+    for (const [key, selector] of [['kids', '[data-edit-kid]'], ['chores', '[data-edit-chore]']]) {
+      form.querySelectorAll(selector).forEach((card, index) => {
+        const draft = ui.draft[key][index];
+        for (const name of ['name', 'emoji']) draft[name] = card.querySelector('[name=' + name + ']').value;
+        draft.active = card.querySelector('[name=active]').checked;
+        if (key === 'chores') draft.yen = card.querySelector('[name=yen]').value;
+      });
+    }
+  }
+
+  function updateCustomChore() {
+    const form = app.querySelector('#record');
+    const custom = form.querySelector('#custom-chore');
+    if (!custom) return;
+    const enabled = form.elements.choreId.value === 'custom';
+    custom.hidden = !enabled;
+    custom.querySelectorAll('input').forEach(field => { field.required = enabled; });
+  }
+
+  function unlockAudio() {
+    try {
+      const Audio = window.AudioContext || window.webkitAudioContext;
+      if (!Audio) return;
+      audio ||= new Audio();
+      if (audio.state === 'suspended') audio.resume().catch(() => {});
+    } catch (_) {}
+  }
+
+  function beep(frequency, length, delay = 0) {
+    if (audio?.state !== 'running') return;
+    try {
+      const start = audio.currentTime + delay;
+      const oscillator = audio.createOscillator();
+      const volume = audio.createGain();
+      oscillator.frequency.value = frequency;
+      volume.gain.setValueAtTime(0.0001, start);
+      volume.gain.exponentialRampToValueAtTime(0.17, start + 0.025);
+      volume.gain.exponentialRampToValueAtTime(0.0001, start + length);
+      oscillator.connect(volume).connect(audio.destination);
+      oscillator.start(start);
+      oscillator.stop(start + length);
+    } catch (_) {}
+  }
+
+  function canSpeak() {
+    return 'speechSynthesis' in window && typeof window.SpeechSynthesisUtterance === 'function';
+  }
+
+  // iPhone/iPad はボタンを押した瞬間に一度しゃべらせないと、あとから声が出ないので無音で下準備する
+  function primeSpeech() {
+    if (!canSpeak() || ui.voiceOff) return;
+    try {
+      const utterance = new SpeechSynthesisUtterance(' ');
+      utterance.volume = 0;
+      utterance.lang = 'ja-JP';
+      speechSynthesis.speak(utterance);
+    } catch (_) {}
+  }
+
+  function speak(text) {
+    if (!canSpeak() || ui.voiceOff) return;
+    try {
+      speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'ja-JP';
+      utterance.rate = 0.95;
+      utterance.pitch = 1.1;
+      const voice = speechSynthesis.getVoices().find(item => /^ja/i.test(item.lang));
+      if (voice) utterance.voice = voice;
+      speechSynthesis.speak(utterance);
+    } catch (_) {}
+  }
+
+  function stopSpeech() {
+    try { if (canSpeak()) speechSynthesis.cancel(); } catch (_) {}
+  }
+
+  async function requestWake() {
+    if (wakePending || wakeLock || !navigator.wakeLock || document.hidden ||
+        ui.page !== 'timer' || ui.timer?.finished) return;
+    wakePending = true;
+    try {
+      const lock = await navigator.wakeLock.request('screen');
+      if (ui.page !== 'timer' || ui.timer?.finished || document.hidden) {
+        await lock.release();
+        return;
+      }
+      wakeLock = lock;
+      lock.addEventListener('release', () => { if (wakeLock === lock) wakeLock = null; });
+    } catch (_) {
+    } finally {
+      wakePending = false;
+    }
+  }
+
+  function releaseWake() {
+    if (wakeLock) wakeLock.release().catch(() => {});
+    wakeLock = null;
+  }
+
+  function showTimer(session) {
+    const same = ui.timer?.session.startedAt === session.startedAt && ui.timer?.kidId === ui.kidId;
+    if (!same) {
+      ui.timer = { session, kidId: ui.kidId, warned: false, finished: false, needsStop: false, spoken: {} };
+      const full = session.maxMinutes * 60;
+      const left = Math.min(secondsLeft(session), full);
+      // 開いた時点で過ぎているお知らせは読まない（途中から開き直したときに連続でしゃべらないように）
+      for (const step of voiceSteps) if (left <= step.at + 1) ui.timer.spoken[step.at] = true;
+      if (full - left < 10) speak('ゲームスタート。残りは' + session.maxMinutes + '分です');
+    }
+    go('timer');
+    requestWake();
+  }
+
+  function secondsLeft(session) {
+    return Math.max(0, session.maxMinutes * 60 - (now() - Date.parse(session.startedAt)) / 1000);
+  }
+
+  function clock(seconds) {
+    const value = Math.ceil(seconds);
+    return String(Math.floor(value / 60)).padStart(2, '0') + ':' + String(value % 60).padStart(2, '0');
+  }
+
+  function finishTimer() {
+    ui.timer.finished = true;
+    ui.timer.needsStop = true;
+    releaseWake();
+    speak('時間です。ゲームをおしまいにしよう');
+    const first = ui.voiceOff || !canSpeak() ? 0 : 3; // 声のあとに警報音
+    for (let offset = first; offset < first + 8; offset++) {
+      beep(730, 0.19, offset);
+      beep(530, 0.19, offset + 0.25);
+    }
+    try { navigator.vibrate?.([300, 150, 300, 150, 500]); } catch (_) {}
+    settleTimer();
+  }
+
+  async function settleTimer() {
+    const timer = ui.timer;
+    if (!timer || timer.stopping) return;
+    timer.stopping = true;
+    try {
+      await call('api_stopGame', { kidId: timer.kidId, startedAt: timer.session.startedAt });
+      timer.needsStop = false;
+      if (ui.timer === timer) await refresh(false, false);
+    } catch (error) {
+      if (ui.timer === timer) showError(error);
+    } finally {
+      timer.stopping = false;
+      if (ui.timer === timer) tick();
+    }
+  }
+
+  function updateText(element, value) {
+    if (element.textContent !== value) element.textContent = value;
+  }
+
+  function tick() {
+    if (ui.page === 'parent') {
+      for (const display of app.querySelectorAll('[data-countdown]')) {
+        const session = ui.data.kids.find(kid => kid.id === display.dataset.countdown)?.session;
+        if (session) updateText(display, 'ゲーム中　のこり ' + clock(secondsLeft(session)));
+      }
+      return;
+    }
+    if (ui.page !== 'timer' || !ui.timer) return;
+    const timer = ui.timer;
+    const full = timer.session.maxMinutes * 60;
+    const left = timer.finished ? 0 : Math.min(secondsLeft(timer.session), full);
+    if (!timer.finished && left <= 0) {
+      finishTimer();
+    } else if (!timer.finished && left <= 60 && !timer.warned) {
+      timer.warned = true;
+      beep(660, 0.2);
+      beep(880, 0.35, 0.22);
+    }
+    if (!timer.finished && left > 0) {
+      timer.spoken ||= {};
+      const step = voiceSteps.slice().reverse().find(item => left <= item.at && !timer.spoken[item.at]);
+      if (step) {
+        voiceSteps.forEach(item => { if (left <= item.at) timer.spoken[item.at] = true; });
+        if (step.at !== 60) beep(660, 0.18);
+        setTimeout(() => { if (ui.timer === timer && !timer.finished) speak(step.text); }, step.at === 60 ? 650 : 300);
+      }
+    }
+    const readout = app.querySelector('#timer-time');
+    updateText(readout, clock(left));
+    readout.classList.toggle('long-time', readout.textContent.length > 7);
+    app.querySelector('#timer-ring').style.setProperty('--progress', 100 * left / full + '%');
+    updateText(app.querySelector('#timer-status'), timer.finished ? 'じかんだよ！ゲームおしまい' :
+      left <= 60 ? 'あと1分！' : left <= 180 ? 'あと3分！そろそろおわるじゅんび' : left <= 300 ? 'あと5分' : '');
+    const voiceButton = app.querySelector('#voice-button');
+    voiceButton.hidden = !canSpeak();
+    updateText(voiceButton, ui.voiceOff ? '🔇 こえのおしらせ：オフ' : '🔊 こえのおしらせ：オン');
+    const graceSeconds = 0; // 1秒でも遊んだら1分として数える
+    const yenPerMinute = timer.session.yenPerMinute;
+    const used = timer.finished ? timer.session.maxMinutes : Math.max(0, Math.ceil((full - left - graceSeconds) / 60));
+    updateText(app.querySelector('#timer-used'), 'つかった ' + used + '分（' + used * yenPerMinute + '円）');
+    const stop = app.querySelector('#timer-button');
+    updateText(stop, !timer.finished ? 'おわる' : timer.stopping ? 'きろく中…' :
+      timer.needsStop ? 'もういちどきろくする' : 'ちょきんにもどる');
+    stop.disabled = timer.stopping || ui.busy;
+    app.querySelector('#sound-button').hidden = timer.finished || audio?.state === 'running' ||
+      !(window.AudioContext || window.webkitAudioContext);
+  }
+
+  async function openParent() {
+    if (ui.pin) {
+      try {
+        await refresh(true, false);
+        go('parent');
+        return;
+      } catch (error) {
+        if (!['pin', 'pinLock'].includes(error.kind)) throw error;
+        rememberPin('', false);
+        toast(error.message);
+      }
+    }
+    go('parentPin');
+  }
+
+  async function start() {
+    const result = await call('api_startGame', { kidId: ui.kidId, minutes: pickValue() });
+    setClock(result.serverNow);
+    if (result.reason) {
+      await refresh();
+      toast(startReasons[result.reason]);
+      return;
+    }
+    showTimer(result.session);
+  }
+
+  async function stop() {
+    if (ui.timer.finished) {
+      if (ui.timer.needsStop) await settleTimer();
+      else if (ownKid()) go('kid');
+      else go('chooser');
+      return;
+    }
+    const timer = ui.timer;
+    const result = await call('api_stopGame', { kidId: timer.kidId, startedAt: timer.session.startedAt });
+    if (!timer.finished) go('kid');
+    await refresh(false);
+    if (!timer.finished) toast(result.minutes ? result.minutes + '分 あそんだよ。' : 'ゲームをおわったよ。');
+  }
+
+  async function navigate(name, id) {
+    if (name === 'choose') {
+      if (id === 'parent') return openParent();
+      ui.kidId = id;
+      stored('localStorage', keys.kid, id);
+      chooseLanding();
+    } else if (name === 'chooser') {
+      ui.kidId = '';
+      stored('localStorage', keys.kid, '');
+      go('chooser');
+    } else if (name === 'forget-code') {
+      persistCode('');
+      rememberPin('', false);
+      ui.data = null;
+      ui.kidId = '';
+      stored('localStorage', keys.kid, '');
+      go('code');
+    } else if (name === 'settings') {
+      if (ui.page !== 'settings') initDraft();
+      go('settings');
+    } else if (name === 'record') {
+      ui.record = id;
+      go('record');
+    } else {
+      go(name);
+    }
+  }
+
+  function editList(name, id) {
+    readDraft(app.querySelector('#settings'));
+    if (name === 'add-kid') ui.draft.kids.push({ name: '', emoji: '🐻', active: true });
+    else if (name === 'add-chore') ui.draft.chores.push({ name: '', emoji: '🧹', yen: 5, active: true });
+    else {
+      const index = Number(id);
+      const next = index + (name === 'up' ? -1 : 1);
+      [ui.draft.chores[index], ui.draft.chores[next]] = [ui.draft.chores[next], ui.draft.chores[index]];
+    }
+    render();
+    if (name.startsWith('add-')) {
+      const selector = name === 'add-kid' ? '[data-edit-kid]' : '[data-edit-chore]';
+      Array.from(app.querySelectorAll(selector)).at(-1)?.querySelector('[name=name]').focus();
+    }
+  }
+
+  app.addEventListener('click', event => {
+    const target = event.target.closest('[data-action]');
+    if (!target || target.disabled || ui.busy) return;
+    const { action: name, id } = target.dataset;
+    if (name === 'revoke' && ui.revokeId !== id) {
+      resetRevoke();
+      ui.revokeId = id;
+      target.classList.add('revoke-confirm');
+      target.textContent = '本当に取り消す？';
+      ui.revokeTimeout = setTimeout(resetRevoke, 4000);
+      return;
+    }
+    if (['start', 'sound', 'stop', 'choose', 'voice'].includes(name)) unlockAudio();
+    if (['start', 'sound', 'choose', 'pick'].includes(name)) primeSpeech();
+    if (name === 'stop') stopSpeech();
+    if (name === 'sound') {
+      beep(660, 0.22, 0.08);
+      return;
+    }
+    if (name === 'voice') {
+      ui.voiceOff = !ui.voiceOff;
+      stored('localStorage', keys.voiceOff, ui.voiceOff ? '1' : '');
+      if (ui.voiceOff) stopSpeech();
+      else speak('声のお知らせをオンにしたよ');
+      tick();
+      return;
+    }
+    if (name === 'add-setup-kid') {
+      const row = document.createElement('div');
+      row.dataset.kid = '';
+      row.innerHTML = nameFields({ name: '', emoji: '🐻' });
+      app.querySelector('#setup-kids').append(row);
+      row.querySelector('[name=name]').focus();
+      return;
+    }
+    if (['add-kid', 'add-chore', 'up', 'down'].includes(name)) {
+      editList(name, id);
+      return;
+    }
+    if (['pick-set', 'pick-minus', 'pick-plus'].includes(name)) {
+      adjustPick(name, id);
+      return;
+    }
+    action(target, async () => {
+      if (name === 'retry') await boot();
+      else if (name === 'start') await start();
+      else if (name === 'stop') await stop();
+      else if (name === 'request') {
+        await call('api_requestChore', { kidId: ui.kidId, choreId: id });
+        go('kid');
+        toast('おうちの人にしらせたよ！');
+        await refresh();
+      } else if (name === 'approve' || name === 'reject') {
+        await call('api_decide', { entryId: id, approve: name === 'approve' }, true);
+        toast(name === 'approve' ? 'しょうにんしました。' : 'しょうにんしませんでした。');
+        await refresh();
+      } else if (name === 'revoke') {
+        resetRevoke();
+        await call('api_revokeEntry', { entryId: id }, true);
+        toast('取り消しました');
+        await refresh();
+      } else if (name === 'parent-stop') {
+        const kid = ui.data.kids.find(person => person.id === id);
+        await call('api_stopGameByParent', { kidId: id, startedAt: kid.session.startedAt }, true);
+        toast('ゲームをとめました。');
+        await refresh();
+      } else {
+        await navigate(name, id);
+      }
+    });
+  });
+
+  switchButton.addEventListener('click', () => navigate('chooser'));
+
+  app.addEventListener('change', event => {
+    if (event.target.name === 'history-filter') {
+      resetRevoke();
+      ui.filter = event.target.value;
+      render();
+      app.querySelector('[name=history-filter]').focus();
+    }
+    if (event.target.name === 'choreId') updateCustomChore();
+  });
+
+  async function submitRecord(fields) {
+    const kidId = fields.kidId.value;
+    if (ui.record === 'chore') {
+      const choreId = fields.choreId.value;
+      const chore = choreId === 'custom' ?
+        { custom: { label: fields.label.value, yen: fields.yen.valueAsNumber } } : { choreId };
+      await call('api_parentAddChore', { kidId, ...chore }, true);
+    } else if (ui.record === 'adjust') {
+      await call('api_adjust', { kidId, yen: fields.yen.valueAsNumber, note: fields.note.value }, true);
+    } else {
+      await call('api_manualGame', { kidId, minutes: fields.minutes.valueAsNumber, note: fields.note.value }, true);
+    }
+    go('parent');
+    toast('記録しました。');
+    await refresh();
+  }
+
+  app.addEventListener('submit', event => {
+    event.preventDefault();
+    const form = event.target;
+    const fields = form.elements;
+    action(event.submitter, async () => {
+      if (form.id === 'setup') {
+        const kids = [...form.querySelectorAll('[data-kid]')].map(row => ({
+          name: row.querySelector('[name=name]').value, emoji: row.querySelector('[name=emoji]').value
+        }));
+        const familyCode = fields.code.value.trim();
+        await rpc('api_init', { familyCode, parentPin: fields.pin.value, kids });
+        persistCode(familyCode);
+        await refresh(false, false);
+        chooseLanding();
+      } else if (form.id === 'code') {
+        persistCode(fields.code.value.trim());
+        await refresh(false, false);
+        chooseLanding();
+      } else if (form.id === 'pin') {
+        const pin = fields.pin.value;
+        await rpc('api_verifyPin', { code: ui.code, pin });
+        rememberPin(pin, fields.remember.checked);
+        await refresh(true, false);
+        go('parent');
+      } else if (form.id === 'record') {
+        await submitRecord(fields);
+      } else if (form.id === 'settings') {
+        readDraft(form);
+        const draft = ui.draft;
+        await call('api_saveSettings', {
+          yenPerMinute: Number(draft.rate), dailyCapMinutes: 0,
+          kids: draft.kids, chores: draft.chores.map(chore => ({ ...chore, yen: Number(chore.yen) })),
+          newFamilyCode: draft.newCode.trim(), newPin: draft.newPin
+        }, true);
+        if (draft.newCode.trim()) persistCode(draft.newCode.trim());
+        if (draft.newPin) rememberPin(draft.newPin, !!stored('localStorage', keys.pin));
+        draft.newCode = '';
+        draft.newPin = '';
+        await refresh(true, false);
+        initDraft();
+        render();
+        toast('設定を保存しました。');
+      }
+    });
+  });
+
+  setInterval(poll, 20000);
+  setInterval(tick, 250);
+  window.addEventListener('focus', poll);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      poll();
+      requestWake();
+      tick();
+    }
+  });
+
+  async function boot() {
+    go('loading');
+    try {
+      const status = await rpc('api_status');
+      if (!status.initialized) {
+        go('fresh');
+        return;
+      }
+      const preview = window.__OTS_PREVIEW__;
+      if (preview) {
+        ui.code = preview.code;
+        ui.pin = preview.pin;
+        const parent = parentPages.includes(preview.page);
+        await refresh(parent, false);
+        ui.kidId = ui.data.kids[0].id;
+        if (preview.page === 'settings') initDraft();
+        if (preview.page === 'timer') showTimer(ownKid().session);
+        else go(preview.page === 'minus' ? 'kid' : preview.page);
+        return;
+      }
+      if (!ui.code) {
+        go('code');
+        return;
+      }
+      await refresh(false, false);
+      chooseLanding();
+    } catch (error) {
+      go('unavailable');
+      showError(error);
+    }
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>
