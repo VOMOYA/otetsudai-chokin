@@ -58,6 +58,12 @@ a { color: var(--green); }
   display: flex; align-items: center; justify-content: space-between; gap: 4px;
 }
 .brand { display: flex; align-items: center; gap: 9px; font-size: 1.04rem; font-weight: 900; white-space: nowrap; }
+.topbar-actions { display: flex; align-items: center; margin-left: auto; }
+#top-back { font-size: .81rem; padding-inline: 4px; }
+.refresh { min-width: 44px; font-size: 1.38rem; }
+@media (max-width: 430px) {
+  #top-back:not([hidden]) + .brand .brand-name { display: none; }
+}
 .brand-icon {
   width: 31px; height: 31px; display: grid; place-items: center; border-radius: 50%;
   background: var(--coin); color: var(--coin-dark); border: 2px solid var(--coin-dark);
@@ -152,6 +158,22 @@ main { width: min(100%, 560px); margin: auto; padding: 19px clamp(14px, 5vw, 22p
 .tile .emoji { font-size: 1.73rem; }
 .tile-value { color: var(--coin-dark); font-size: .84rem; font-weight: 900; }
 .tile .avatar { margin-bottom: 3px; }
+.tile.new-chore { border: 2px dashed var(--green-edge); background: var(--green-light); color: var(--green); box-shadow: none; }
+.choice-field { min-width: 0; padding: 0; margin: 0; border: 0; }
+.choice-field legend { margin-bottom: 5px; padding: 0; font-weight: 800; }
+.choice-grid { display: grid; gap: 6px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.choice-grid.yen-choices { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.choice { position: relative; cursor: pointer; }
+.choice input { position: absolute; width: 1px; height: 1px; min-height: 0; opacity: 0; }
+.choice span {
+  display: grid; place-items: center; min-height: 48px; border: 1px solid var(--border);
+  border-radius: 12px; background: var(--white); font-weight: 900;
+}
+.choice .emoji { font-size: 1.47rem; }
+.choice input:checked + span { background: var(--coin-light); border-color: var(--coin-dark); }
+.choice input:focus-visible + span { outline: 3px solid var(--focus); outline-offset: 2px; }
+.proposal-heading h2 { flex-wrap: wrap; }
+.proposal-card .button { font-size: .88rem; }
 .pick-panel { display: grid; gap: 6px; justify-items: center; padding: 18px 14px; }
 .pick-stepper { display: flex; align-items: center; justify-content: center; gap: 18px; width: 100%; }
 .button.step-button {
@@ -203,6 +225,7 @@ main { width: min(100%, 560px); margin: auto; padding: 19px clamp(14px, 5vw, 22p
 .record-actions { display: grid; gap: 6px; }
 .record-actions .button { justify-content: flex-start; }
 .edit-card { display: grid; gap: 5px; }
+.proposal-badge { justify-self: start; }
 .edit-chore-fields { display: grid; grid-template-columns: 63px minmax(0, 1fr) 68px; gap: 7px; }
 .order-buttons { display: flex; gap: 5px; }
 .order-buttons .button { min-width: 56px; padding: 5px; }
@@ -225,8 +248,12 @@ main { width: min(100%, 560px); margin: auto; padding: 19px clamp(14px, 5vw, 22p
 <body>
   <header class="topbar">
     <div class="topbar-inner">
-      <div class="brand"><span class="brand-icon" aria-hidden="true">¥</span>おてつだい貯金</div>
-      <button id="switch" class="switch text-button" type="button" hidden>きりかえ <span aria-hidden="true">↔</span></button>
+      <button id="top-back" class="text-button" type="button" hidden>← もどる</button>
+      <div class="brand"><span class="brand-icon" aria-hidden="true">¥</span><span class="brand-name">おてつだい貯金</span></div>
+      <div class="topbar-actions">
+        <button id="refresh" class="refresh text-button" type="button" aria-label="さいしんにする" hidden>↻</button>
+        <button id="switch" class="switch text-button" type="button" hidden>きりかえ <span aria-hidden="true">↔</span></button>
+      </div>
     </div>
   </header>
   <main id="app" aria-busy="true"><p class="loading">よみこみ中…</p></main>
@@ -238,6 +265,8 @@ main { width: min(100%, 560px); margin: auto; padding: 19px clamp(14px, 5vw, 22p
 
   const app = document.querySelector('#app');
   const switchButton = document.querySelector('#switch');
+  const topBack = document.querySelector('#top-back');
+  const refreshButton = document.querySelector('#refresh');
   const toastElement = document.querySelector('#toast');
   const keys = { code: 'help-save-code', kid: 'help-save-kid', pin: 'help-save-pin', voiceOff: 'help-save-voice-off' };
   // のこり時間を声で知らせるタイミング（秒）と、読み上げる言葉（読み間違いを防ぐため漢字まじり）
@@ -254,12 +283,25 @@ main { width: min(100%, 560px); margin: auto; padding: 19px clamp(14px, 5vw, 22p
     timeZone: 'Asia/Tokyo', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
   });
   const parentPages = ['parent', 'history', 'settings', 'record'];
+  const kidPages = ['kid', 'chores', 'newChore', 'pick', 'timer'];
+  const backPages = {
+    chores: 'kid', newChore: 'chores', pick: 'kid', parentPin: 'chooser',
+    history: 'parent', settings: 'parent', record: 'parent'
+  };
+  const choreEmojis = ['🌟', '🪴', '🐶', '🍳', '🛒', '🧺', '🪟', '📚', '🧸', '🛏️', '🚲', '🧼', '🍚', '🚪', '🌸', '💪'];
+  const choreAmounts = [5, 10, 15, 20, 30, 50];
+  const gasHistory = window.google?.script?.history;
+  let historyState = gasHistory ? null : history.state;
+  let currentHash = location.hash;
+  let routeVersion = 0;
+  let routing = false;
   const ui = {
     page: 'loading', data: null, code: stored('localStorage', keys.code) || '',
     pin: stored('localStorage', keys.pin) || stored('sessionStorage', keys.pin) || '',
     kidId: stored('localStorage', keys.kid) || '', skew: 0, authVersion: 0,
     fetchVersion: 0, busy: false, polling: false, toastId: null,
-    timer: null, draft: null, filter: '', record: null, revokeId: null, revokeTimeout: null,
+    timer: null, draft: null, filter: '', record: null, parentTarget: 'parent',
+    confirm: null, confirmTimeout: null, proposalEdits: new Map(),
     voiceOff: stored('localStorage', keys.voiceOff) === '1'
   };
   let audio;
@@ -348,7 +390,7 @@ main { width: min(100%, 560px); margin: auto; padding: 19px clamp(14px, 5vw, 22p
       go('code');
     } else if (['pin', 'pinLock'].includes(error.kind) && parentPages.includes(ui.page)) {
       rememberPin('', false);
-      go('parentPin');
+      enterParentPin(pageRoute(ui.page), 'replace');
     }
     toast(error.message || connectionError);
   }
@@ -357,6 +399,8 @@ main { width: min(100%, 560px); margin: auto; padding: 19px clamp(14px, 5vw, 22p
     if (ui.busy) return;
     ui.busy = true;
     switchButton.disabled = true;
+    topBack.disabled = true;
+    refreshButton.disabled = true;
     if (button) button.disabled = true;
     try {
       await work();
@@ -365,13 +409,47 @@ main { width: min(100%, 560px); margin: auto; padding: 19px clamp(14px, 5vw, 22p
     } finally {
       ui.busy = false;
       switchButton.disabled = false;
+      topBack.disabled = false;
+      refreshButton.disabled = false;
       if (button?.isConnected) button.disabled = false;
     }
   }
 
-  function go(page) {
+  function pageRoute(page) {
+    return page === 'record' ? 'record/' + ui.record : page;
+  }
+
+  function routeFromHash(hash) {
+    return hash.startsWith('#/') ? hash.slice(2) : '';
+  }
+
+  function savedPage(page) {
+    return kidPages.includes(page) || parentPages.includes(page) || page === 'parentPin' || page === 'chooser';
+  }
+
+  function writeRoute(page, mode) {
+    if (mode === 'pop' || !savedPage(page)) return;
+    const hash = '#/' + pageRoute(page);
+    const push = mode === 'push' || (mode !== 'replace' && savedPage(ui.page) && hash !== currentHash);
+    const state = {
+      otsRoute: pageRoute(page),
+      otsPrevious: push ? routeFromHash(currentHash) : historyState?.otsPrevious,
+      ...(page === 'parentPin' ? { otsParentTarget: ui.parentTarget } : {})
+    };
+    if (gasHistory) {
+      gasHistory[push ? 'push' : 'replace'](state, null, hash.slice(1));
+    } else {
+      history[push ? 'pushState' : 'replaceState'](state, '', hash);
+    }
+    currentHash = hash;
+    historyState = state;
+  }
+
+  function go(page, mode) {
     const changed = ui.page !== page;
-    if (changed && ui.page === 'history') resetRevoke();
+    if (changed) resetConfirm();
+    if (changed && ui.page === 'parent') ui.proposalEdits.clear();
+    writeRoute(page, mode);
     ui.page = page;
     render();
     if (changed) window.scrollTo(0, 0);
@@ -389,29 +467,29 @@ main { width: min(100%, 560px); margin: auto; padding: 19px clamp(14px, 5vw, 22p
     return Date.now() + ui.skew;
   }
 
-  function chooseLanding() {
+  function chooseLanding(mode) {
     const kid = ownKid();
-    if (kid?.session) showTimer(kid.session);
-    else go(kid ? 'kid' : 'chooser');
+    if (kid?.session) showTimer(kid.session, mode);
+    else go(kid ? 'kid' : 'chooser', mode);
   }
 
-  async function refresh(parent = parentPages.includes(ui.page), repaint = true) {
+  async function refresh(parent = parentPages.includes(ui.page), repaint = true, manual = false) {
     const auth = ui.authVersion;
     const request = ++ui.fetchVersion;
     const state = await call('api_getState', {}, parent);
-    if (auth !== ui.authVersion || request !== ui.fetchVersion) return;
+    if (auth !== ui.authVersion || request !== ui.fetchVersion) return false;
     ui.data = state;
     setClock(state.serverNow);
-    if (!repaint) return;
+    if (!repaint) return true;
 
-    if (['kid', 'chores', 'timer'].includes(ui.page)) {
+    if (kidPages.includes(ui.page)) {
       const kid = ownKid();
       if (!kid) {
         go('chooser');
       } else if (ui.page !== 'timer' && kid.session) {
         showTimer(kid.session);
       } else if (ui.page === 'timer') {
-        if (ui.timer.finished) return;
+        if (ui.timer.finished) return true;
         if (kid.session?.startedAt === ui.timer.session.startedAt) {
           tick();
         } else if (secondsLeft(ui.timer.session) <= 0) {
@@ -422,16 +500,22 @@ main { width: min(100%, 560px); margin: auto; padding: 19px clamp(14px, 5vw, 22p
           go('kid');
           toast('ゲームがおわったよ。');
         }
-      } else {
+      } else if (['kid', 'chores'].includes(ui.page) || (manual && ui.page === 'pick')) {
         render();
       }
     } else if (['chooser', 'parent', 'history'].includes(ui.page)) {
+      const editingProposal = ui.page === 'parent' &&
+        (document.activeElement?.closest('.proposal-card input') || ui.confirm?.name === 'decline-proposal');
+      if (manual || !editingProposal) render();
+    } else if (manual && ui.page === 'settings' && !ui.settingsEdited) {
+      initDraft();
       render();
     }
+    return true;
   }
 
   async function poll() {
-    if (document.hidden || ui.busy || ui.polling || !ui.code || !ui.data) return;
+    if (document.hidden || ui.busy || routing || ui.polling || !ui.code || !ui.data) return;
     ui.polling = true;
     const auth = ui.authVersion;
     const page = ui.page;
@@ -481,14 +565,21 @@ main { width: min(100%, 560px); margin: auto; padding: 19px clamp(14px, 5vw, 22p
     return yen < 0 ? signed(yen) : yen.toLocaleString('ja-JP');
   }
 
-  function resetRevoke() {
-    clearTimeout(ui.revokeTimeout);
-    ui.revokeId = null;
-    const target = app.querySelector('.revoke-confirm');
+  function resetConfirm() {
+    clearTimeout(ui.confirmTimeout);
+    ui.confirm = null;
+    const target = app.querySelector('[data-confirm-label][data-confirming]');
     if (target) {
-      target.classList.remove('revoke-confirm');
-      target.textContent = '取り消す';
+      delete target.dataset.confirming;
+      target.textContent = target.dataset.confirmLabel;
     }
+  }
+
+  function confirmButton(name, id, label, prompt, style) {
+    const confirming = ui.confirm?.name === name && ui.confirm.id === id;
+    return button(confirming ? prompt : label, name, style,
+      attrId(id) + ' data-confirm-label="' + label + '" data-confirm-prompt="' + prompt + '"' +
+      (confirming ? ' data-confirming' : ''));
   }
 
   function input(label, name, value = '', attrs = '') {
@@ -553,10 +644,8 @@ main { width: min(100%, 560px); margin: auto; padding: 19px clamp(14px, 5vw, 22p
       const cancelled = entry.status === 'cancelled';
       const statusLabel = parent && cancelled ? '取り消し' : statuses[entry.status];
       const status = entry.type === 'chore' ? '<div>' + badge(statusLabel, entry.status) + '</div>' : '';
-      const confirming = ui.revokeId === entry.id;
       const revoke = parent && entry.type === 'chore' && entry.status === 'approved' ?
-        button(confirming ? '本当に取り消す？' : '取り消す', 'revoke',
-          'negative revoke-button' + (confirming ? ' revoke-confirm' : ''), attrId(entry.id)) : '';
+        confirmButton('revoke', entry.id, '取り消す', '本当に取り消す？', 'negative revoke-button') : '';
       const tone = cancelled ? 'cancelled' : entry.yen < 0 ? 'minus' : 'plus';
       return '<div class="entry"><div class="entry-text">' + escapeHtml(entry.label + minutes) + detail + status +
         (parent && entry.note ? '<p class="helper">' + escapeHtml(entry.note) + '</p>' : '') +
@@ -588,10 +677,33 @@ main { width: min(100%, 560px); margin: auto; padding: 19px clamp(14px, 5vw, 22p
     const tiles = ui.data.chores.map(chore =>
       '<button type="button" class="tile" data-action="request"' + attrId(chore.id) + '>' +
       emoji(chore.emoji) + '<span>' + escapeHtml(chore.name) + '</span>' +
-      '<span class="tile-value">＋' + chore.yen + '円</span></button>').join('');
+      '<span class="tile-value">＋' + chore.yen + '円</span>' +
+      (chore.proposedBy ? badge('OKまち') : '') + '</button>').join('');
     return back('kid', 'ちょきんにもどる') + '<div class="heading"><h1>おてつだいした！</h1>' +
       '<p>なにをしたか、えらんでね。</p></div>' +
-      (tiles ? '<div class="tile-grid">' + tiles + '</div>' : '<p class="empty">いまはえらべるおてつだいがないよ。</p>');
+      '<div class="tile-grid">' + tiles +
+      '<button type="button" class="tile new-chore" data-action="newChore"><span>＋ あたらしい <br>おてつだい</span>' +
+      '<small>じぶんで つくる</small></button></div>';
+  }
+
+  function choreChoices(label, name, values, selected) {
+    const isEmoji = name === 'emoji';
+    const tiles = values.map(value => '<label class="choice"><input type="radio" name="' + name +
+      '" value="' + value + '"' + (value === selected ? ' checked' : '') + '><span' +
+      (isEmoji ? ' class="emoji">' + value : '>' + value + '円') + '</span></label>').join('');
+    return '<fieldset class="choice-field"><legend>' + label + '</legend><div class="choice-grid' +
+      (isEmoji ? '' : ' yen-choices') + '">' + tiles + '</div></fieldset>';
+  }
+
+  function newChorePage() {
+    return '<div class="heading"><h1>あたらしい おてつだい</h1><p>リストに ない おてつだいを つくろう</p></div>' +
+      '<form id="new-chore" class="panel stack">' +
+      input('なにを した？', 'name', '', 'placeholder="れい：うえきに みずやり" maxlength="20" required') +
+      choreChoices('マークを えらぶ', 'emoji', choreEmojis, '🌟') +
+      choreChoices('なんえん？', 'yen', choreAmounts, 10) +
+      '<p class="helper">おうちの人が OKしたら、みんなの リストに はいるよ。きんがくは おうちの人が かえることも あるよ。</p>' +
+      '<div class="stack compact">' + submit('やったので しらせる') +
+      '<button type="submit" class="button secondary wide" value="create">つくるだけ（あとで やる）</button></div></form>';
   }
 
   // 「なんぷん あそぶ？」：残高の範囲で遊ぶ時間を選んでからタイマーを始める
@@ -661,13 +773,45 @@ main { width: min(100%, 560px); margin: auto; padding: 19px clamp(14px, 5vw, 22p
         page === ui.page ? ' aria-current="page"' : '')).join('') + '</nav>';
   }
 
+  function proposingKid(chore) {
+    return ui.data.editable.kids.find(kid => kid.id === chore.proposedBy);
+  }
+
+  function proposalSection(proposals, pendingCounts) {
+    if (!proposals.length) return '';
+    const cards = proposals.map(chore => {
+      const kid = proposingKid(chore);
+      const count = pendingCounts.get(chore.id);
+      const fields = ui.proposalEdits.get(chore.id) || chore;
+      return '<form class="panel fields proposal-card"' + attrId(chore.id) + '>' +
+        '<div class="between"><strong class="wrap">' + escapeHtml(kid ? kid.emoji + ' ' + kid.name : '子ども') +
+        'が つくった</strong>' + (count ? badge('しんせい中 ' + count + '件') : '') + '</div>' +
+        '<div class="edit-chore-fields">' +
+        input('絵文字', 'emoji', fields.emoji, 'maxlength="32"') +
+        input('おてつだい名', 'name', fields.name, 'required maxlength="40"') +
+        input('円', 'yen', fields.yen, 'type="number" step="1" min="0" inputmode="numeric" required') +
+        '</div><div class="card-actions"><button type="submit" class="button secondary">✓ リストに入れる</button>' +
+        confirmButton('decline-proposal', chore.id, '✕ 入れない', '本当に入れない？', 'negative') + '</div></form>';
+    }).join('');
+    return '<section class="stack compact"><div class="section-head proposal-heading">' +
+      '<h2>新しいおてつだい（子どもの提案） ' + badge(proposals.length + '件') + '</h2></div>' +
+      '<p class="helper">リストに入れると、しんせい中のぶんもこの金額になります。入れないと、しんせい中のぶんは「ちがう」になります。</p>' +
+      cards + '</section>';
+  }
+
   function parentPage() {
     const data = ui.data;
+    const proposals = data.editable.chores.filter(chore => chore.proposedBy);
+    const proposalIds = new Set(proposals.map(chore => chore.id));
+    const pendingCounts = new Map();
     const pending = data.pending.map(entry => {
       const kid = data.editable.kids.find(person => person.id === entry.kidId);
+      const proposed = proposalIds.has(entry.choreId);
+      if (proposed) pendingCounts.set(entry.choreId, (pendingCounts.get(entry.choreId) || 0) + 1);
       return '<article class="panel stack compact"><div class="between"><div class="entry-text"><p class="helper">' +
         escapeHtml(kid ? kid.emoji + ' ' + kid.name : '子ども') + '</p><div>' + escapeHtml(entry.label) +
-        '</div></div><strong class="yen plus">' + signed(entry.yen) + '円</strong></div><div class="card-actions">' +
+        '</div>' + (proposed ? badge('新しいおてつだい') : '') +
+        '</div><strong class="yen plus">' + signed(entry.yen) + '円</strong></div><div class="card-actions">' +
         button('✓ OK', 'approve', 'secondary', attrId(entry.id)) +
         button('✕ ちがう', 'reject', 'negative', attrId(entry.id)) + '</div></article>';
     }).join('');
@@ -681,7 +825,7 @@ main { width: min(100%, 560px); margin: auto; padding: 19px clamp(14px, 5vw, 22p
         '円</strong></div><p class="helper">今日のゲーム ' + kid.usedTodayMinutes + '分' +
         (cap ? ' / ' + cap + '分' : '') + '</p>' + running + '</article>';
     }).join('');
-    return parentHeader('おうちの人') +
+    return parentHeader('おうちの人') + proposalSection(proposals, pendingCounts) +
       '<section><div class="section-head"><h2>承認待ち ' + badge(data.pending.length + '件') + '</h2></div>' +
       (pending ? '<div class="stack compact">' + pending + '</div>' : '<p class="empty">承認待ちはありません。</p>') + '</section>' +
       '<section><div class="section-head"><h2>子どものようす</h2></div><div class="stack compact">' + cards + '</div></section>' +
@@ -720,15 +864,21 @@ main { width: min(100%, 560px); margin: auto; padding: 19px clamp(14px, 5vw, 22p
     const draft = ui.draft;
     const editableKids = draft.kids.map(kid => '<div class="panel edit-card" data-edit-kid>' +
       nameFields(kid) + check('表示する', 'active', kid.active) + '</div>').join('');
-    const editableChores = draft.chores.map((chore, index) =>
-      '<div class="panel edit-card" data-edit-chore><div class="edit-chore-fields">' +
+    const currentChores = new Map(ui.data.editable.chores.map(chore => [chore.id, chore]));
+    const editableChores = draft.chores.map((chore, index) => {
+      const proposal = currentChores.get(chore.id);
+      const proposer = proposal?.proposedBy ? proposingKid(proposal) : null;
+      return '<div class="panel edit-card" data-edit-chore>' +
+      (proposal?.proposedBy ? '<div class="proposal-badge">' + badge((proposer?.name || '子ども') + 'の提案・未確認') + '</div>' : '') +
+      '<div class="edit-chore-fields">' +
       input('絵文字', 'emoji', chore.emoji, 'maxlength="32"') +
       input('おてつだい', 'name', chore.name, 'required maxlength="40"') +
       input('円', 'yen', chore.yen, 'type="number" step="1" min="0" inputmode="numeric" required') +
       '</div><div class="between">' + check('表示する', 'active', chore.active) + '<div class="order-buttons">' +
       button('↑', 'up', '', attrId(index) + ' aria-label="上に移動"' + (index === 0 ? ' disabled' : '')) +
       button('↓', 'down', '', attrId(index) + ' aria-label="下に移動"' + (index === draft.chores.length - 1 ? ' disabled' : '')) +
-      '</div></div></div>').join('');
+      '</div></div></div>';
+    }).join('');
     const link = /^https:\/\/docs\.google\.com\/spreadsheets\//.test(ui.data.sheetUrl) ?
       '<a class="link-button" href="' + escapeHtml(ui.data.sheetUrl) +
         '" target="_blank" rel="noopener">スプレッドシートを開く ↗</a>' : '';
@@ -748,13 +898,16 @@ main { width: min(100%, 560px); margin: auto; padding: 19px clamp(14px, 5vw, 22p
   }
 
   const pages = {
-    fresh: setupPage, code: codePage, chooser: chooserPage, kid: kidPage, chores: choresPage, pick: pickPage, timer: timerPage,
+    fresh: setupPage, code: codePage, chooser: chooserPage, kid: kidPage, chores: choresPage,
+    newChore: newChorePage, pick: pickPage, timer: timerPage,
     parentPin: pinPage, parent: parentPage, history: historyPage, record: recordPage, settings: settingsPage,
     unavailable: () => '<p class="muted">よみこめなかったよ。</p>' + button('もういちどためす', 'retry', 'primary wide')
   };
 
   function render() {
     switchButton.hidden = !ui.data || ui.page === 'chooser' || ui.page === 'code';
+    topBack.hidden = !backPages[ui.page];
+    refreshButton.hidden = !ui.data || !savedPage(ui.page);
     if (ui.page !== 'timer') releaseWake();
     if (ui.page !== 'timer' && ui.timer?.finished) ui.timer = null;
     app.className = 'page-stack';
@@ -765,6 +918,7 @@ main { width: min(100%, 560px); margin: auto; padding: 19px clamp(14px, 5vw, 22p
   }
 
   function initDraft() {
+    ui.settingsEdited = false;
     ui.draft = {
       rate: ui.data.settings.yenPerMinute,
       newCode: '', newPin: '', kids: ui.data.editable.kids.map(kid => ({ ...kid })),
@@ -877,7 +1031,7 @@ main { width: min(100%, 560px); margin: auto; padding: 19px clamp(14px, 5vw, 22p
     wakeLock = null;
   }
 
-  function showTimer(session) {
+  function showTimer(session, mode) {
     const same = ui.timer?.session.startedAt === session.startedAt && ui.timer?.kidId === ui.kidId;
     if (!same) {
       ui.timer = { session, kidId: ui.kidId, warned: false, finished: false, needsStop: false, spoken: {} };
@@ -887,7 +1041,7 @@ main { width: min(100%, 560px); margin: auto; padding: 19px clamp(14px, 5vw, 22p
       for (const step of voiceSteps) if (left <= step.at + 1) ui.timer.spoken[step.at] = true;
       if (full - left < 10) speak('ゲームスタート。残りは' + session.maxMinutes + '分です');
     }
-    go('timer');
+    go('timer', mode);
     requestWake();
   }
 
@@ -983,19 +1137,92 @@ main { width: min(100%, 560px); margin: auto; padding: 19px clamp(14px, 5vw, 22p
       !(window.AudioContext || window.webkitAudioContext);
   }
 
-  async function openParent() {
+  function parentRoute(route) {
+    if (['record/chore', 'record/game'].includes(route)) return route;
+    return ['history', 'settings'].includes(route) ? route : 'parent';
+  }
+
+  function enterParentPin(route, mode) {
+    ui.parentTarget = parentRoute(route);
+    go('parentPin', mode);
+  }
+
+  function showParent(route, mode) {
+    if (route === 'settings' && ui.page !== 'settings') initDraft();
+    if (route.startsWith('record/')) {
+      ui.record = route.slice('record/'.length);
+      go('record', mode);
+    } else {
+      go(route, mode);
+    }
+  }
+
+  async function openParent(route = 'parent', mode) {
+    const version = routeVersion;
     if (ui.pin) {
       try {
-        await refresh(true, false);
-        go('parent');
+        if (await refresh(true, false) && version === routeVersion) showParent(route, mode);
         return;
       } catch (error) {
+        if (version !== routeVersion) return;
         if (!['pin', 'pinLock'].includes(error.kind)) throw error;
         rememberPin('', false);
         toast(error.message);
       }
     }
-    go('parentPin');
+    if (!ui.data && !(await refresh(false, false))) return;
+    if (version === routeVersion) enterParentPin(route, mode === 'pop' ? 'replace' : mode);
+  }
+
+  async function restoreRoute(route, mode) {
+    const page = route.split('/')[0];
+    const version = routeVersion;
+    if (parentPages.includes(page)) {
+      const target = parentRoute(route);
+      await openParent(target, route === target ? mode : 'replace');
+      return;
+    }
+    if (!ui.data && !(await refresh(false, false))) return;
+    if (version !== routeVersion) return;
+    const redirect = mode === 'pop' ? 'replace' : mode;
+    if (kidPages.includes(route)) {
+      const kid = ownKid();
+      if (!kid) go('chooser', redirect);
+      else if (kid.session && secondsLeft(kid.session) > 0) showTimer(kid.session, route === 'timer' ? mode : redirect);
+      else if (route === 'timer') go('kid', redirect);
+      else go(route, mode);
+    } else if (route === 'parentPin') {
+      enterParentPin(historyState?.otsParentTarget, mode);
+    } else if (route === 'chooser') {
+      go('chooser', mode);
+    } else {
+      chooseLanding(redirect);
+    }
+  }
+
+  async function onHistoryChange(hash, state) {
+    currentHash = hash;
+    historyState = state;
+    if (!ui.data) return;
+    const version = ++routeVersion;
+    ++ui.fetchVersion;
+    const route = routeFromHash(hash);
+    const running = ui.page === 'timer' && ui.timer && !ui.timer.finished && secondsLeft(ui.timer.session) > 0
+      ? ui.timer.session : ownKid()?.session;
+    if (running && secondsLeft(running) > 0 && route !== 'timer') {
+      routing = false;
+      showTimer(running, 'push');
+      toast('ゲームちゅうは「おわる」で おわってね');
+      return;
+    }
+    routing = true;
+    try {
+      await restoreRoute(route, 'pop');
+    } catch (error) {
+      if (version === routeVersion) showError(error);
+    } finally {
+      if (version === routeVersion) routing = false;
+    }
   }
 
   async function start() {
@@ -1006,6 +1233,7 @@ main { width: min(100%, 560px); margin: auto; padding: 19px clamp(14px, 5vw, 22p
       toast(startReasons[result.reason]);
       return;
     }
+    ownKid().session = result.session;
     showTimer(result.session);
   }
 
@@ -1018,6 +1246,7 @@ main { width: min(100%, 560px); margin: auto; padding: 19px clamp(14px, 5vw, 22p
     }
     const timer = ui.timer;
     const result = await call('api_stopGame', { kidId: timer.kidId, startedAt: timer.session.startedAt });
+    if (ownKid()?.id === timer.kidId) ownKid().session = null;
     if (!timer.finished) go('kid');
     await refresh(false);
     if (!timer.finished) toast(result.minutes ? result.minutes + '分 あそんだよ。' : 'ゲームをおわったよ。');
@@ -1052,6 +1281,7 @@ main { width: min(100%, 560px); margin: auto; padding: 19px clamp(14px, 5vw, 22p
   }
 
   function editList(name, id) {
+    ui.settingsEdited = true;
     readDraft(app.querySelector('#settings'));
     if (name === 'add-kid') ui.draft.kids.push({ name: '', emoji: '🐻', active: true });
     else if (name === 'add-chore') ui.draft.chores.push({ name: '', emoji: '🧹', yen: 5, active: true });
@@ -1069,14 +1299,14 @@ main { width: min(100%, 560px); margin: auto; padding: 19px clamp(14px, 5vw, 22p
 
   app.addEventListener('click', event => {
     const target = event.target.closest('[data-action]');
-    if (!target || target.disabled || ui.busy) return;
+    if (!target || target.disabled || ui.busy || routing) return;
     const { action: name, id } = target.dataset;
-    if (name === 'revoke' && ui.revokeId !== id) {
-      resetRevoke();
-      ui.revokeId = id;
-      target.classList.add('revoke-confirm');
-      target.textContent = '本当に取り消す？';
-      ui.revokeTimeout = setTimeout(resetRevoke, 4000);
+    if (target.dataset.confirmLabel && (ui.confirm?.name !== name || ui.confirm.id !== id)) {
+      resetConfirm();
+      ui.confirm = { name, id };
+      target.dataset.confirming = '';
+      target.textContent = target.dataset.confirmPrompt;
+      ui.confirmTimeout = setTimeout(resetConfirm, 4000);
       return;
     }
     if (['start', 'sound', 'stop', 'choose', 'voice'].includes(name)) unlockAudio();
@@ -1122,12 +1352,14 @@ main { width: min(100%, 560px); margin: auto; padding: 19px clamp(14px, 5vw, 22p
       } else if (name === 'approve' || name === 'reject') {
         await call('api_decide', { entryId: id, approve: name === 'approve' }, true);
         toast(name === 'approve' ? 'しょうにんしました。' : 'しょうにんしませんでした。');
-        await refresh();
+        await refresh(true, true, true);
       } else if (name === 'revoke') {
-        resetRevoke();
+        resetConfirm();
         await call('api_revokeEntry', { entryId: id }, true);
         toast('取り消しました');
         await refresh();
+      } else if (name === 'decline-proposal') {
+        await decideProposal(target.form, false);
       } else if (name === 'parent-stop') {
         const kid = ui.data.kids.find(person => person.id === id);
         await call('api_stopGameByParent', { kidId: id, startedAt: kid.session.startedAt }, true);
@@ -1139,11 +1371,34 @@ main { width: min(100%, 560px); margin: auto; padding: 19px clamp(14px, 5vw, 22p
     });
   });
 
-  switchButton.addEventListener('click', () => navigate('chooser'));
+  switchButton.addEventListener('click', () => { if (!routing) navigate('chooser'); });
+
+  topBack.addEventListener('click', () => {
+    const target = backPages[ui.page];
+    if (!target || routing) return;
+    if (historyState?.otsPrevious === target) history.back();
+    else action(topBack, () => restoreRoute(target, 'replace'));
+  });
+
+  refreshButton.addEventListener('click', () => {
+    if (routing) return;
+    action(refreshButton, async () => {
+      if (await refresh(parentPages.includes(ui.page), true, true)) toast('さいしんにしたよ');
+    });
+  });
+
+  app.addEventListener('input', event => {
+    if (event.target.form?.id === 'settings') ui.settingsEdited = true;
+    const card = event.target.closest('.proposal-card');
+    if (card) {
+      const { name, emoji, yen } = card.elements;
+      ui.proposalEdits.set(card.dataset.id, { name: name.value, emoji: emoji.value, yen: yen.value });
+    }
+  });
 
   app.addEventListener('change', event => {
     if (event.target.name === 'history-filter') {
-      resetRevoke();
+      resetConfirm();
       ui.filter = event.target.value;
       render();
       app.querySelector('[name=history-filter]').focus();
@@ -1168,8 +1423,21 @@ main { width: min(100%, 560px); margin: auto; padding: 19px clamp(14px, 5vw, 22p
     await refresh();
   }
 
+  async function decideProposal(form, approve) {
+    const choreId = form.dataset.id;
+    const { name, emoji, yen } = form.elements;
+    const edits = approve ? { name: name.value, emoji: emoji.value, yen: yen.valueAsNumber } : {};
+    resetConfirm();
+    await call('api_decideChore', { choreId, approve, ...edits }, true);
+    ui.proposalEdits.delete(choreId);
+    toast(approve ? 'リストに入れました' : 'リストに入れませんでした');
+    await refresh(true, false);
+    if (ui.page === 'parent') render();
+  }
+
   app.addEventListener('submit', event => {
     event.preventDefault();
+    if (routing) return;
     const form = event.target;
     const fields = form.elements;
     action(event.submitter, async () => {
@@ -1184,14 +1452,23 @@ main { width: min(100%, 560px); margin: auto; padding: 19px clamp(14px, 5vw, 22p
         chooseLanding();
       } else if (form.id === 'code') {
         persistCode(fields.code.value.trim());
-        await refresh(false, false);
-        chooseLanding();
+        await restoreRoute(routeFromHash(currentHash), 'replace');
       } else if (form.id === 'pin') {
         const pin = fields.pin.value;
         await rpc('api_verifyPin', { code: ui.code, pin });
         rememberPin(pin, fields.remember.checked);
         await refresh(true, false);
-        go('parent');
+        showParent(ui.parentTarget, 'replace');
+      } else if (form.id === 'new-chore') {
+        const request = event.submitter?.value !== 'create';
+        await call('api_proposeChore', {
+          kidId: ui.kidId, name: fields.name.value, emoji: fields.emoji.value, yen: Number(fields.yen.value), request
+        });
+        go(request ? 'kid' : 'chores');
+        toast(request ? 'おうちの人に しらせたよ！' : 'リストに いれたよ。おうちの人の OKまちだよ');
+        await refresh();
+      } else if (form.classList.contains('proposal-card')) {
+        await decideProposal(form, true);
       } else if (form.id === 'record') {
         await submitRecord(fields);
       } else if (form.id === 'settings') {
@@ -1217,6 +1494,13 @@ main { width: min(100%, 560px); margin: auto; padding: 19px clamp(14px, 5vw, 22p
   setInterval(poll, 20000);
   setInterval(tick, 250);
   window.addEventListener('focus', poll);
+  if (gasHistory) {
+    gasHistory.setChangeHandler(event => {
+      onHistoryChange(event.location.hash ? '#' + event.location.hash : '', event.state);
+    });
+  } else {
+    window.addEventListener('popstate', event => onHistoryChange(location.hash, event.state));
+  }
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) {
       poll();
@@ -1237,20 +1521,24 @@ main { width: min(100%, 560px); margin: auto; padding: 19px clamp(14px, 5vw, 22p
       if (preview) {
         ui.code = preview.code;
         ui.pin = preview.pin;
-        const parent = parentPages.includes(preview.page);
+        const parent = parentPages.includes(preview.page.split('/')[0]);
         await refresh(parent, false);
         ui.kidId = ui.data.kids[0].id;
-        if (preview.page === 'settings') initDraft();
-        if (preview.page === 'timer') showTimer(ownKid().session);
-        else go(preview.page === 'minus' ? 'kid' : preview.page);
+        if (parent) showParent(parentRoute(preview.page), 'replace');
+        else if (preview.page === 'timer') showTimer(ownKid().session);
+        else if (preview.page === 'minus') go('kid', 'pop');
+        else go(preview.page);
         return;
+      }
+      if (gasHistory) {
+        const outer = await new Promise(resolve => google.script.url.getLocation(resolve));
+        currentHash = outer.hash ? '#' + outer.hash : '';
       }
       if (!ui.code) {
         go('code');
         return;
       }
-      await refresh(false, false);
-      chooseLanding();
+      await restoreRoute(routeFromHash(currentHash), 'replace');
     } catch (error) {
       go('unavailable');
       showError(error);
